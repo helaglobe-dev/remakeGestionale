@@ -2,21 +2,24 @@
   "name": "helaproject-remake",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": "^22.22.3 || ^24.15.0 || >=26.0.0"
+  },
   "scripts": {
     "dev": "nuxt dev",
     "build": "nuxt build",
     "preview": "nuxt preview",
     "typecheck": "nuxt typecheck",
     "db:push": "drizzle-kit push",
-    "db:seed": "node server/db/seed.ts",
+    "db:seed": "node --env-file-if-exists=.env server/db/seed.ts",
     "db:reset": "echo \"Attenzione: sostituisce i dati con quelli demo. Usa db:reset:confirm\" && exit 1",
     "postinstall": "nuxt prepare",
-    "test": "node --test --test-concurrency=1 tests/api/",
-    "test:ui": "node tests/ui/smoke.mjs",
-    "db:import": "node server/db/import/parse-dump.mjs \"$DUMP\" data/import && node server/db/import/import-production.ts data/import --user \"$IMPORT_USER\"",
-    "test:prepare": "DATABASE_URL=file:./data/test.db drizzle-kit push --force && DATABASE_URL=file:./data/test.db node server/db/seed.ts --reset",
-    "test:server": "nuxt build && DATABASE_URL=file:./data/test.db PORT=3002 node .output/server/index.mjs",
-    "db:reset:confirm": "drizzle-kit push --force && node server/db/seed.ts --reset"
+    "test": "node --env-file-if-exists=.env --test --test-concurrency=1 tests/api/",
+    "test:ui": "node --env-file-if-exists=.env tests/ui/smoke.mjs",
+    "db:import": "node server/db/import/parse-dump.mjs \"$DUMP\" data/import && node --env-file-if-exists=.env server/db/import/import-production.ts data/import --user \"$IMPORT_USER\"",
+    "test:prepare": "DATABASE_URL=file:./data/test.db drizzle-kit push --force && DATABASE_URL=file:./data/test.db node --env-file-if-exists=.env server/db/seed.ts --reset",
+    "test:server": "nuxt build && DATABASE_URL=file:./data/test.db PORT=3002 node --env-file-if-exists=.env .output/server/index.mjs",
+    "db:reset:confirm": "drizzle-kit push --force && node --env-file-if-exists=.env server/db/seed.ts --reset"
   },
   "dependencies": {
     "@libsql/client": "^0.18.0",
