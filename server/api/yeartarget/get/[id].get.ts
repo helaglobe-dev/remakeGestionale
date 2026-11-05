@@ -1,0 +1,1 @@
+export default yeartargetCrud.get
