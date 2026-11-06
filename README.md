@@ -164,6 +164,46 @@ Le formule economiche verificate sono documentate nei sorgenti e in `docs/spec-f
 
 Il repository non contiene database di lavoro, dump importati o credenziali. Per segnalazioni di sicurezza seguire [SECURITY.md](SECURITY.md); per proporre modifiche vedere [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Deploy self-hosted
+## Pubblicazione con Pangolin
 
-Per condividere il mockup tramite un server fisico senza esporre porte pubbliche è disponibile una configurazione Docker Compose con Pangolin Site, controllo degli accessi, health check e backup SQLite. Il DNS può restare su Register.it; la procedura completa è in [docs/deployment-self-hosted.md](docs/deployment-self-hosted.md).
+Il mockup può essere eseguito sul server fisico e condiviso senza aprire porte applicative in ingresso. Docker Compose avvia:
+
+- `app`: build Nuxt/Nitro con SQLite persistente in `data/`;
+- `pangolin-site`: connettore in uscita verso Pangolin Cloud;
+- `setup`: servizio manuale usato per schema e seed iniziale.
+
+### Configurazione del server
+
+Creare un Site in Pangolin Cloud e copiare localmente il file di configurazione:
+
+```bash
+cp ops/deploy.env.example .env.deploy
+chmod 600 .env.deploy
+```
+
+Compilare in `.env.deploy`:
+
+- `PUBLIC_HOSTNAME`: dominio assegnato alla risorsa Pangolin;
+- `PANGOLIN_ENDPOINT`: normalmente `https://app.pangolin.net`;
+- `SITE_ID` e `SITE_SECRET`: credenziali generate dal Site;
+- `SEED_PASSWORD`: password casuale di almeno 16 caratteri per gli utenti demo.
+
+Avviare quindi lo stack:
+
+```bash
+./ops/deploy.sh
+docker compose --env-file .env.deploy ps
+docker compose --env-file .env.deploy logs --tail=100 app pangolin-site
+```
+
+Nel pannello Pangolin creare una risorsa HTTP/HTTPS con Site corrispondente e target `http://app:3000`, quindi assegnarla soltanto agli utenti autorizzati. Il DNS può restare su Register.it usando il record CNAME indicato da Pangolin.
+
+`.env.deploy`, database e backup sono intenzionalmente esclusi da Git e dal contesto Docker. Non pubblicare mai `SITE_SECRET` o password nel repository.
+
+Backup manuale:
+
+```bash
+./ops/backup.sh
+```
+
+La procedura completa, compresi DNS, accessi, aggiornamenti, ripristino e firewall, è in [docs/deployment-self-hosted.md](docs/deployment-self-hosted.md).
