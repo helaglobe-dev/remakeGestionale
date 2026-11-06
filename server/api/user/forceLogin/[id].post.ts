@@ -10,5 +10,7 @@ export default defineEventHandler(async (event) => {
   const [u] = await db.select().from(schema.users).where(eq(schema.users.id, id))
   if (!u || u.activeuser !== 1) fail(404, 'Utente non trovato o non attivo')
   console.info(`[impersonazione] utente ${me.id} → utente ${id}`)
-  return ok({ user: { ...publicUser(u), token: await createSession(id) } })
+  const token = await createSession(id)
+  setSessionCookie(event, token)
+  return ok({ user: { ...publicUser(u), token } })
 })

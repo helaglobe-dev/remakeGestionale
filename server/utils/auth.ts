@@ -1,6 +1,6 @@
 import type { H3Event } from 'h3'
 import { randomBytes } from 'node:crypto'
-import { eq, and, gt } from 'drizzle-orm'
+import { eq, and, gt, lte } from 'drizzle-orm'
 import { db, schema } from '../db'
 
 export type SessionUser = {
@@ -19,11 +19,14 @@ export type SessionUser = {
 }
 
 const SESSION_HOURS = 48
+export const SESSION_COOKIE = 'hp_session'
+const SESSION_MAX_AGE = SESSION_HOURS * 3600
 
 export async function createSession(userId: number): Promise<string> {
   // Prefisso "<userId>-" come nell'originale, utile per riconoscere l'identità dal token.
   const token = `${userId}-${randomBytes(32).toString('hex')}`
   const expiresAt = new Date(Date.now() + SESSION_HOURS * 3600_000).toISOString()
+  await db.delete(schema.sessions).where(lte(schema.sessions.expiresAt, new Date().toISOString()))
   await db.insert(schema.sessions).values({ token, userId, expiresAt })
   return token
 }
@@ -33,8 +36,22 @@ function bearer(event: H3Event): string | null {
   return h?.startsWith('Bearer ') ? h.slice(7) : null
 }
 
+function sessionToken(event: H3Event): string | null {
+  return bearer(event) ?? getCookie(event, SESSION_COOKIE) ?? null
+}
+
+export function setSessionCookie(event: H3Event, token: string) {
+  setCookie(event, SESSION_COOKIE, token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: SESSION_MAX_AGE,
+  })
+}
+
 export async function getSessionUser(event: H3Event): Promise<SessionUser | null> {
-  const token = bearer(event)
+  const token = sessionToken(event)
   if (!token) return null
   const [row] = await db
     .select({
@@ -60,8 +77,9 @@ export async function requireUser(event: H3Event): Promise<SessionUser> {
 }
 
 export async function destroySession(event: H3Event) {
-  const token = bearer(event)
+  const token = sessionToken(event)
   if (token) await db.delete(schema.sessions).where(eq(schema.sessions.token, token))
+  deleteCookie(event, SESSION_COOKIE, { path: '/' })
 }
 
 export const isAdmin = (u: SessionUser) => u.role === 'S' || u.role === 'A'

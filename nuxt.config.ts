@@ -3,6 +3,7 @@ import vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
 export default defineNuxtConfig({
   compatibilityDate: '2026-10-01',
   ssr: false, // SPA come l'originale: è un gestionale dietro login
+  telemetry: false,
   devtools: { enabled: false },
   css: ['@mdi/font/css/materialdesignicons.css', '~/assets/main.css'],
   build: { transpile: ['vuetify'] },

@@ -1,13 +1,12 @@
-// Client API: aggiunge il token, estrae `data` e traduce gli errori nel messaggio del server.
+// Client API: usa la sessione HttpOnly same-origin, estrae `data` e traduce gli errori.
 export function useApi() {
-  const { token, logout } = useAuth()
+  const { logout } = useAuth()
 
   async function api<T = any>(path: string, opts: { method?: 'GET' | 'POST', body?: unknown } = {}): Promise<T> {
     try {
       const res = await $fetch<{ success: boolean, data: T }>(`/api/${path}`, {
         method: opts.method ?? (opts.body !== undefined ? 'POST' : 'GET'),
         body: opts.body as any,
-        headers: token.value ? { Authorization: `Bearer ${token.value}` } : {},
       })
       return res.data
     }

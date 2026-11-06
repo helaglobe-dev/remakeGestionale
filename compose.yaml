@@ -1,0 +1,90 @@
+name: helaproject-remake
+
+x-app-environment: &app-environment
+  NODE_ENV: production
+  DATABASE_URL: file:/app/data/helaproject.db
+  APP_URL: https://${PUBLIC_HOSTNAME:?Imposta PUBLIC_HOSTNAME nel file di deploy}
+  TZ: ${TZ:-Europe/Rome}
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "3"
+
+services:
+  app:
+    build:
+      context: .
+      target: runtime
+    restart: unless-stopped
+    init: true
+    environment: *app-environment
+    volumes:
+      - ./data:/app/data
+    expose:
+      - "3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 30s
+    logging: *default-logging
+    networks:
+      - private
+
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command:
+      - tunnel
+      - --no-autoupdate
+      - --loglevel
+      - info
+      - run
+      - --token
+      - ${CLOUDFLARE_TUNNEL_TOKEN:?Imposta CLOUDFLARE_TUNNEL_TOKEN nel file di deploy}
+    depends_on:
+      app:
+        condition: service_healthy
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    logging: *default-logging
+    networks:
+      - private
+
+  setup:
+    profiles: [tools]
+    build:
+      context: .
+      target: build
+    user: "1000:1000"
+    working_dir: /app
+    environment:
+      <<: *app-environment
+      SEED_PASSWORD: ${SEED_PASSWORD:?Imposta una SEED_PASSWORD robusta nel file di deploy}
+    volumes:
+      - ./data:/app/data
+    command: ["npm", "run", "db:push"]
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - private
+
+networks:
+  private:
+    driver: bridge

@@ -163,3 +163,7 @@ Le formule economiche verificate sono documentate nei sorgenti e in `docs/spec-f
 ## Stato e sicurezza
 
 Il repository non contiene database di lavoro, dump importati o credenziali. Per segnalazioni di sicurezza seguire [SECURITY.md](SECURITY.md); per proporre modifiche vedere [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Deploy self-hosted
+
+Per condividere il mockup tramite un server fisico senza esporre porte pubbliche è disponibile una configurazione Docker Compose con Cloudflare Tunnel, Cloudflare Access, health check e backup SQLite. La procedura completa è in [docs/deployment-self-hosted.md](docs/deployment-self-hosted.md).

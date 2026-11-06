@@ -1,5 +1,5 @@
-// Tutte le route /api richiedono un token, tranne il login.
-const PUBLIC = new Set(['/api/user/login', '/api/user/sendemailrecoverypassword', '/api/user/reset_password', '/api/user/confirmuser', '/api/user/set_password'])
+// Tutte le route /api richiedono una sessione, tranne autenticazione e health check.
+const PUBLIC = new Set(['/api/health', '/api/user/login', '/api/user/sendemailrecoverypassword', '/api/user/reset_password', '/api/user/confirmuser', '/api/user/set_password'])
 
 export default defineEventHandler(async (event) => {
   const path = event.path.split('?')[0] ?? ''

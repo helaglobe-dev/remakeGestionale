@@ -2,7 +2,7 @@
 useHead({ title: 'Utenti – Helaproject' })
 const api = useApi()
 const toast = useSnackbar()
-const { user, token } = useAuth()
+const { user } = useAuth()
 const profiles = ref<{ value: number, title: string }[]>([])
 onMounted(async () => {
   profiles.value = (await api<any[]>('userprofile/list')).map(p => ({ value: p.id, title: p.profilename }))
@@ -38,8 +38,7 @@ const toImpersonate = ref<Record<string, any> | null>(null)
 async function impersonate() {
   const u = toImpersonate.value!
   try {
-    const res = await api<{ user: { token: string } }>(`user/forceLogin/${u.id}`, { method: 'POST' })
-    token.value = res.user.token
+    await api(`user/forceLogin/${u.id}`, { method: 'POST' })
     window.location.href = '/'
   }
   catch (e: any) { toast.error(e.message) }

@@ -8,7 +8,7 @@ Legenda: **[O]** osservato nel codice frontend · **[I]** inferenza · **[?]** d
 ## Stack originale [O]
 
 - Frontend: Nuxt 3 SPA (Vue 3 + Vuetify 3), servito sotto `/main/`, PWA "Helaproject".
-- Auth: `@sidebase/nuxt-auth` provider `local`: `POST user/login` → token in `/data/user/token`, header `Authorization: Bearer`, cookie `auth.token` (48 h), sessione `GET user/me` (dati in `/data`), logout `GET user/logout`.
+- Auth: API locale con `POST user/login`; il browser usa il cookie di sessione `hp_session` HttpOnly/SameSite (48 h), mentre i client API controllati possono usare `Authorization: Bearer`. Sessione `GET user/me`, logout `POST user/logout`.
 - Backend: Apache + API JSON sotto `/api/` (stile CakePHP: wrapper `{Project:{…}, Client:{…}, Projectuser:[…]}`) **[I]**.
 - Errori: il body d'errore è `{errors:{title:"…"}}` **[O]**.
 - Export Excel con SheetJS **[O]**.

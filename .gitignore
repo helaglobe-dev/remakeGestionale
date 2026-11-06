@@ -4,6 +4,7 @@
 /.data/
 /data/*.db*
 /data/import/
+/backups/
 
 .env
 .env.*
