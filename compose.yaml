@@ -42,23 +42,17 @@ services:
     networks:
       - private
 
-  tunnel:
-    image: cloudflare/cloudflared:latest
+  pangolin-site:
+    image: fosrl/pangolin-cli:latest
+    container_name: pangolin-site
     restart: unless-stopped
-    command:
-      - tunnel
-      - --no-autoupdate
-      - --loglevel
-      - info
-      - run
-      - --token
-      - ${CLOUDFLARE_TUNNEL_TOKEN:?Imposta CLOUDFLARE_TUNNEL_TOKEN nel file di deploy}
+    environment:
+      PANGOLIN_ENDPOINT: ${PANGOLIN_ENDPOINT:?Imposta PANGOLIN_ENDPOINT nel file di deploy}
+      SITE_ID: ${SITE_ID:?Imposta SITE_ID nel file di deploy}
+      SITE_SECRET: ${SITE_SECRET:?Imposta SITE_SECRET nel file di deploy}
     depends_on:
       app:
         condition: service_healthy
-    read_only: true
-    cap_drop:
-      - ALL
     security_opt:
       - no-new-privileges:true
     logging: *default-logging

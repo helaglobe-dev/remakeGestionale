@@ -5,6 +5,7 @@
 /data/*.db*
 /data/import/
 /backups/
+/tmp
 
 .env
 .env.*

@@ -18,8 +18,8 @@ set -a
 . "$ENV_FILE"
 set +a
 
-if [ -z "${PUBLIC_HOSTNAME:-}" ] || [ -z "${CLOUDFLARE_TUNNEL_TOKEN:-}" ] || [ -z "${SEED_PASSWORD:-}" ]; then
-  echo "Compila PUBLIC_HOSTNAME, CLOUDFLARE_TUNNEL_TOKEN e SEED_PASSWORD." >&2
+if [ -z "${PUBLIC_HOSTNAME:-}" ] || [ -z "${PANGOLIN_ENDPOINT:-}" ] || [ -z "${SITE_ID:-}" ] || [ -z "${SITE_SECRET:-}" ] || [ -z "${SEED_PASSWORD:-}" ]; then
+  echo "Compila PUBLIC_HOSTNAME, PANGOLIN_ENDPOINT, SITE_ID, SITE_SECRET e SEED_PASSWORD." >&2
   exit 1
 fi
 
@@ -43,9 +43,17 @@ if [ "${#SEED_PASSWORD}" -lt 16 ]; then
   exit 1
 fi
 
-case "$CLOUDFLARE_TUNNEL_TOKEN" in
-  incolla-qui-*|replace-*|"")
-    echo "CLOUDFLARE_TUNNEL_TOKEN contiene ancora il valore di esempio." >&2
+case "$PANGOLIN_ENDPOINT" in
+  https://*) ;;
+  *)
+    echo "PANGOLIN_ENDPOINT deve essere un URL HTTPS completo." >&2
+    exit 1
+    ;;
+esac
+
+case "$SITE_ID:$SITE_SECRET" in
+  *incolla-qui-*|*replace-*|:|*:)
+    echo "SITE_ID o SITE_SECRET contiene ancora il valore di esempio." >&2
     exit 1
     ;;
 esac
@@ -66,5 +74,5 @@ if [ "$new_database" -eq 1 ]; then
   docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" --profile tools run --rm setup npm run db:seed
 fi
 
-docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d app tunnel
+docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d app pangolin-site
 docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" ps

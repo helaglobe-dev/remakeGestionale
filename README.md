@@ -166,4 +166,4 @@ Il repository non contiene database di lavoro, dump importati o credenziali. Per
 
 ## Deploy self-hosted
 
-Per condividere il mockup tramite un server fisico senza esporre porte pubbliche è disponibile una configurazione Docker Compose con Cloudflare Tunnel, Cloudflare Access, health check e backup SQLite. La procedura completa è in [docs/deployment-self-hosted.md](docs/deployment-self-hosted.md).
+Per condividere il mockup tramite un server fisico senza esporre porte pubbliche è disponibile una configurazione Docker Compose con Pangolin Site, controllo degli accessi, health check e backup SQLite. Il DNS può restare su Register.it; la procedura completa è in [docs/deployment-self-hosted.md](docs/deployment-self-hosted.md).

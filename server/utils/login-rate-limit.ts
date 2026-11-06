@@ -8,8 +8,7 @@ const MAX_BUCKETS = 5_000
 const buckets = new Map<string, Bucket>()
 
 function clientIp(event: H3Event) {
-  return getHeader(event, 'cf-connecting-ip')
-    ?? getRequestIP(event, { xForwardedFor: true })
+  return getRequestIP(event, { xForwardedFor: true })
     ?? 'unknown'
 }
 
