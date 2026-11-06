@@ -1,5 +1,5 @@
 // Importa i dati di produzione (JSON prodotti da parse-dump.mjs) nel database del remake.
-// Uso: node server/db/import/import-production.ts data/import [--user email-per-link-password]
+// Uso: node server/db/import/import-production.ts data/import [--user email-per-link-password] [--keep email-utente-da-conservare]
 // - svuota tutte le tabelle (dopo un backup del file DB) e reimporta mantenendo gli ID originali
 // - NON importa le password: gli hash dell'originale (SHA1/MD5) sono deboli e non verificabili. Ogni utente
 //   imposta una nuova password dal link di conferma; per l'utente indicato con --user il link viene stampato.
@@ -15,7 +15,9 @@ import * as schema from '../schema.ts'
 import { mapHistories } from './histories.ts'
 
 const dir = process.argv[2] ?? 'data/import'
-const userArg = process.argv.indexOf('--user') > 0 ? process.argv[process.argv.indexOf('--user') + 1] : null
+const arg = (name: string) => process.argv.indexOf(name) > 0 ? process.argv[process.argv.indexOf(name) + 1] : null
+const userArg = arg('--user')
+const keepArg = arg('--keep')
 const DB = process.env.DATABASE_URL ?? 'file:./data/helaproject.db'
 const dbFile = DB.replace(/^file:/, '')
 
@@ -61,6 +63,10 @@ if (fs.existsSync(dbFile)) {
 }
 const client = createClient({ url: DB })
 const db = drizzle(client, { schema })
+// utente locale (es. admin) da reinserire dopo l'import con un nuovo ID, così sopravvive allo svuotamento
+const kept = keepArg ? await db.query.users.findFirst({ where: (u, { eq }) => eq(u.email, keepArg.toLowerCase()) }) : null
+if (keepArg && !kept) throw new Error(`Utente da conservare ${keepArg} non trovato: nessuna modifica fatta`)
+if (kept && load('users').some(u => String(u.email).trim().toLowerCase() === kept.email)) throw new Error(`${kept.email} è già nel dump: nessuna modifica fatta`)
 const TABLES = ['sessions', 'usertokens', 'notifications', 'passiveinvoicerows', 'passiveinvoices', 'activeinvoices', 'paymenttranches',
   'budgetitems', 'banks', 'hours', 'projecthistories', 'sponsors', 'tasks', 'projectusers', 'projects', 'usercosts', 'profileprices',
   'profilecosts', 'holidays', 'yeartargets', 'activities', 'macrovoices', 'suppliers', 'projectcolors', 'clients', 'users', 'userprofiles']
@@ -90,6 +96,11 @@ await insert(schema.users, users.map(u => ({
   activeuser: u.status === 'D' ? 0 : int01(u.activeuser), created: dt(u.created), modified: dt(u.modified),
 })), 'utenti')
 const userIds = ids(users)
+if (kept) {
+  const { id: _id, ...rest } = kept
+  await db.insert(schema.users).values({ ...rest, userprofileId: null })
+  console.log(`utente conservato: ${kept.email}`)
+}
 
 const dedupe = (rows: Row[], key: (r: Row) => string) => [...new Map(rows.map(r => [key(r), r])).values()]
 await insert(schema.profileprices, dedupe(load('upprices').filter(r => profileIds.has(r.userprofile_id)), r => `${r.userprofile_id}|${r.year}`)

@@ -6,7 +6,7 @@ import { db, schema } from '../../db'
 export default defineEventHandler(async (event) => {
   const { email } = await readValid(event, z.object({ email: z.string().trim().toLowerCase().email('Email non valida') }))
   const [u] = await db.select().from(schema.users).where(sql`lower(${schema.users.email}) = ${email}`)
-  if (u && u.activeuser === 1) {
+  if (u) {
     const code = await createUserToken(u.id, 'reset')
     deliverLink(u.email, 'Recupero password Helaproject', `/resetpassword?code=${code}`)
   }

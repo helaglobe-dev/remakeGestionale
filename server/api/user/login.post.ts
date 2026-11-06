@@ -8,7 +8,8 @@ export default defineEventHandler(async (event) => {
   const { email, password } = await readValid(event, Body)
   assertLoginAllowed(event, email)
   const [u] = await db.select().from(schema.users).where(eq(schema.users.email, email))
-  if (!u || u.activeuser !== 1 || !u.passwordHash || !(await verifyPassword(password, u.passwordHash))) {
+  // activeuser governa solo le select (vedi manuale), non l'accesso: gli account di servizio inattivi devono poter entrare
+  if (!u || !u.passwordHash ||!(await verifyPassword(password, u.passwordHash))) {
     recordLoginFailure(event, email)
     fail(401, 'Email o password non corretti')
   }

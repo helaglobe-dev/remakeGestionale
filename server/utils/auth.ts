@@ -60,14 +60,11 @@ export async function getSessionUser(event: H3Event): Promise<SessionUser | null
       hasprojects: schema.users.hasprojects, hasinvoice: schema.users.hasinvoice,
       viewdashboard: schema.users.viewdashboard, viewkpi: schema.users.viewkpi,
       viewbudget: schema.users.viewbudget, cancreatemacro: schema.users.cancreatemacro,
-      activeuser: schema.users.activeuser,
     })
     .from(schema.sessions)
     .innerJoin(schema.users, eq(schema.sessions.userId, schema.users.id))
     .where(and(eq(schema.sessions.token, token), gt(schema.sessions.expiresAt, new Date().toISOString())))
-  if (!row || row.activeuser !== 1) return null
-  const { activeuser: _, ...user } = row
-  return user
+  return row ?? null
 }
 
 export async function requireUser(event: H3Event): Promise<SessionUser> {
