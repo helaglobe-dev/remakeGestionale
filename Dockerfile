@@ -22,6 +22,8 @@ ENV NODE_ENV=production \
 RUN mkdir -p /app/data && chown node:node /app/data
 
 COPY --from=build --chown=node:node /app/.output ./.output
+# ponytail: Nitro's tracer skips libsql's musl binary; x64 only, add arm64 if the host changes
+COPY --from=build --chown=node:node /app/node_modules/@libsql/linux-x64-musl ./.output/server/node_modules/@libsql/linux-x64-musl
 
 USER node
 EXPOSE 3000

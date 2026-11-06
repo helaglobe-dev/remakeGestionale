@@ -41,7 +41,6 @@ Il progetto include questa struttura Compose:
 services:
   pangolin-site:
     image: fosrl/pangolin-cli:latest
-    container_name: pangolin-site
     restart: unless-stopped
     environment:
       PANGOLIN_ENDPOINT: ${PANGOLIN_ENDPOINT}
